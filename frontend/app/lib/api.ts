@@ -160,12 +160,12 @@ export interface MultiTenantResponse  {
 }
 
 export const authApi = {
-  register:     (p: RegisterPayload) =>
-    apiFetch<RegisterResponse>('/auth/register',        { method: 'POST', body: p, skipAuthRedirect: true }),
-  login:        (p: LoginPayload) =>
-    apiFetch<LoginResponse>('/auth/login',              { method: 'POST', body: p, skipAuthRedirect: true }),
-  loginByEmail: (p: LoginByEmailPayload) =>
-    apiFetch<LoginResponse>('/auth/login-by-email', { method: 'POST', body: p, skipAuthRedirect: true })
+  register:     (p: RegisterPayload, opts?: Opts) =>
+    apiFetch<RegisterResponse>('/auth/register',        { method: 'POST', body: p, skipAuthRedirect: true, ...(opts ?? {}) }),
+  login:        (p: LoginPayload, opts?: Opts) =>
+    apiFetch<LoginResponse>('/auth/login',              { method: 'POST', body: p, skipAuthRedirect: true, ...(opts ?? {}) }),
+  loginByEmail: (p: LoginByEmailPayload, opts?: Opts) =>
+    apiFetch<LoginResponse>('/auth/login-by-email', { method: 'POST', body: p, skipAuthRedirect: true, ...(opts ?? {}) })
       .catch((err: unknown) => {
         if (
           err instanceof ApiError &&
@@ -317,8 +317,8 @@ export interface AdminClient {
 }
 
 export const adminApi = {
-  login:      (p: AdminLoginPayload) =>
-    apiFetch<AdminLoginResponse>('/admin/login', { method: 'POST', body: p, skipAuthRedirect: true }),
+  login:      (p: AdminLoginPayload, opts?: Opts) =>
+    apiFetch<AdminLoginResponse>('/admin/login', { method: 'POST', body: p, skipAuthRedirect: true, ...(opts ?? {}) }),
   getStats:   () =>
     apiFetch<AdminStats>('/admin/stats',   { method: 'GET', adminAuth: true }),
   listClients: () =>
