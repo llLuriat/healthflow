@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    // Tailwind CSS IntelliSense — obrigatório para @source, @theme, @apply (v4)
+    "bradlc.vscode-tailwindcss",
+    // Prettier — formatação consistente
+    "esbenp.prettier-vscode",
+    // ESLint — linting TypeScript/React
+    "dbaeumer.vscode-eslint",
+    // Docker — syntax highlighting para Dockerfiles
+    "ms-azuretools.vscode-docker"
+  ]
+}

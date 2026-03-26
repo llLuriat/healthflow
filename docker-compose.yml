@@ -1,0 +1,74 @@
+# docker-compose.yml — Desenvolvimento local
+# Para produção, use: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+
+services:
+  healthflow-db:
+    image: postgres:15
+    container_name: healthflow-db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: healthflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - healthflow_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - healthflow-network
+
+  backend:
+    build:
+      context: ./backend
+      target: builder  # usa stage de build (com ts-node) em dev
+    container_name: healthflow-backend
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      healthflow-db:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgres://postgres:postgres@healthflow-db:5432/healthflow
+      ADMIN_DATABASE_URL: postgres://postgres:postgres@healthflow-db:5432/healthflow
+      JWT_SECRET: ${JWT_SECRET:-dev_secret_change_in_production}
+      JWT_EXPIRES_IN: 15m
+      CORS_ORIGINS: http://localhost:5173,http://healthflow-frontend:80
+      ENABLE_UNSAFE_TENANT: "true"   # dev only
+      DB_POOL_MAX: "10"
+      DB_IDLE_TIMEOUT_MS: "30000"
+      DB_CONN_TIMEOUT_MS: "5000"
+    command: ["npm", "run", "dev"]
+    networks:
+      - healthflow-network
+
+  frontend:
+    build:
+      context: ./frontend
+      target: builder  # usa stage de build (com vite dev server) em dev
+    container_name: healthflow-frontend
+    restart: always
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    environment:
+      VITE_API_URL: ""   # vazio = usa proxy do Vite (evita CORS em dev)
+      NODE_ENV: development
+    command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+    networks:
+      - healthflow-network
+
+volumes:
+  healthflow_data:
+
+networks:
+  healthflow-network:
+    driver: bridge

@@ -1,0 +1,45 @@
+# docker-compose.prod.yml — Produção
+# Uso: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Variáveis obrigatórias (definir no ambiente ou via .env de produção):
+#   JWT_SECRET          — segredo JWT forte (openssl rand -hex 64)
+#   POSTGRES_PASSWORD   — senha do banco (NÃO use 'postgres' em produção)
+
+services:
+  healthflow-db:
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD obrigatório em produção}
+    volumes:
+      - healthflow_data:/var/lib/postgresql/data
+      # Sem o script de init aqui — migrations rodam via o backend ao subir
+
+  backend:
+    build:
+      context: ./backend
+      target: production  # usa o stage de produção (JS compilado, sem ts-node)
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@healthflow-db:5432/healthflow
+      ADMIN_DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@healthflow-db:5432/healthflow
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET obrigatório em produção}
+      JWT_EXPIRES_IN: 15m
+      CORS_ORIGINS: ${CORS_ORIGINS:-https://app.healthflow.io}
+      ENABLE_UNSAFE_TENANT: "false"
+      DB_POOL_MAX: "20"
+      DB_IDLE_TIMEOUT_MS: "30000"
+      DB_CONN_TIMEOUT_MS: "5000"
+    command: ["node", "dist/src/index.js"]
+
+  frontend:
+    build:
+      context: ./frontend
+      target: production  # usa nginx
+      args:
+        VITE_API_URL: ${VITE_API_URL:-https://api.healthflow.io}
+    ports:
+      - "80:80"
+      - "443:443"
+
+volumes:
+  healthflow_data:
+    external: true  # volume criado manualmente — não destruído por down -v

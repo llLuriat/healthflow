@@ -1,0 +1,12 @@
+@import 'tailwindcss' source(none);
+@source '../**/*.{js,ts,jsx,tsx}';
+
+@import 'tw-animate-css';
+
+/* Registra --hf-primary como token do tema Tailwind v4 */
+/* Isso garante que bg-[var(--hf-primary)] seja gerado corretamente */
+@theme inline {
+  --color-hf-primary: var(--hf-primary, #2563eb);
+  --color-hf-primary-hover: var(--hf-primary-hover, #1d4ed8);
+  --color-hf-primary-light: var(--hf-primary-light, #dbeafe);
+}
