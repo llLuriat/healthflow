@@ -6,6 +6,7 @@ import {
   validateRequiredString,
   validateOptionalString,
 } from '../utils/validators';
+import { sendError } from '../utils/http';
 
 // ─── CREATE ───────────────────────────────────────────────────────────────────
 export async function createProfessional(
@@ -34,7 +35,7 @@ export async function createProfessional(
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
     if (err instanceof ValidationError) {
-      res.status(err.status).json({ error: err.message });
+      sendError(res, err.status, 'validation_error', err.message);
       return;
     }
     throw err;
@@ -76,7 +77,7 @@ export async function getProfessional(
   );
 
   if (result.rows.length === 0) {
-    res.status(404).json({ error: 'Profissional não encontrado' });
+    sendError(res, 404, 'not_found', 'Profissional não encontrado');
     return;
   }
 
@@ -99,7 +100,7 @@ export async function updateProfessional(
       [tenantId, id],
     );
     if (existing.rows.length === 0) {
-      res.status(404).json({ error: 'Profissional não encontrado' });
+      sendError(res, 404, 'not_found', 'Profissional não encontrado');
       return;
     }
 
@@ -123,7 +124,7 @@ export async function updateProfessional(
     res.json(result.rows[0]);
   } catch (err: any) {
     if (err instanceof ValidationError) {
-      res.status(err.status).json({ error: err.message });
+      sendError(res, err.status, 'validation_error', err.message);
       return;
     }
     throw err;
@@ -147,7 +148,7 @@ export async function deleteProfessional(
   );
 
   if (result.rows.length === 0) {
-    res.status(404).json({ error: 'Profissional não encontrado' });
+    sendError(res, 404, 'not_found', 'Profissional não encontrado');
     return;
   }
 

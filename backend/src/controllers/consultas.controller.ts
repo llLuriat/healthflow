@@ -9,6 +9,7 @@ import {
   validateOptionalNumber,
   validateISODateTime,
 } from "../utils/validators";
+import { sendError } from "../utils/http";
 
 type ConsultaStatus =
   | "scheduled"
@@ -104,7 +105,7 @@ export async function createConsulta(
     res.status(201).json(result.rows[0]);
   } catch (err: any) {
     if (err instanceof ValidationError) {
-      res.status(err.status).json({ error: err.message });
+      sendError(res, err.status, "validation_error", err.message);
       return;
     }
     throw err;
@@ -155,7 +156,7 @@ export async function getConsulta(
   );
 
   if (result.rows.length === 0) {
-    res.status(404).json({ error: "Consulta não encontrada" });
+    sendError(res, 404, "not_found", "Consulta não encontrada");
     return;
   }
 
@@ -172,9 +173,7 @@ export async function updateConsultaEstado(
   const tenantId = req.auth!.tenantId;
 
   if (!estado || !isValidStatus(estado)) {
-    res.status(400).json({
-      error: `estado inválido. Valores aceitos: ${VALID_ESTADOS.join(", ")}`,
-    });
+    sendError(res, 400, "validation_error", `estado inválido. Valores aceitos: ${VALID_ESTADOS.join(", ")}`);
     return;
   }
 
@@ -184,7 +183,7 @@ export async function updateConsultaEstado(
   );
 
   if (current.rows.length === 0) {
-    res.status(404).json({ error: "Consulta não encontrada" });
+    sendError(res, 404, "not_found", "Consulta não encontrada");
     return;
   }
 
@@ -238,16 +237,14 @@ export async function deleteConsulta(
   );
 
   if (current.rows.length === 0) {
-    res.status(404).json({ error: "Consulta não encontrada" });
+    sendError(res, 404, "not_found", "Consulta não encontrada");
     return;
   }
 
   const currentStatus = current.rows[0].status as ConsultaStatus;
 
   if (currentStatus === "finished" || currentStatus === "cancelled") {
-    res.status(400).json({
-      error: `Não é possível cancelar consulta com status '${currentStatus}'`,
-    });
+    sendError(res, 409, "conflict", `Não é possível cancelar consulta com status '${currentStatus}'`);
     return;
   }
 

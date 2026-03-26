@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { SignOptions } from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import pool from '../db/pool';
 import {
@@ -9,10 +10,11 @@ import {
   validateRequiredString,
   validatePassword,
 } from '../utils/validators';
+import { sendError } from '../utils/http';
 
 const JWT_SECRET    = process.env.JWT_SECRET as string;
 const SALT_ROUNDS   = 10;
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN ?? '15m';
+const JWT_EXPIRES_IN = (process.env.JWT_EXPIRES_IN ?? '15m') as SignOptions['expiresIn'];
 
 // ─── REGISTER ─────────────────────────────────────────────────────────────────
 export async function register(req: Request, res: Response): Promise<void> {
@@ -50,7 +52,7 @@ export async function register(req: Request, res: Response): Promise<void> {
     } catch (err: any) {
       await client.query('ROLLBACK');
       if (err.code === '23505') {
-        res.status(409).json({ error: 'Email já cadastrado neste tenant' });
+        sendError(res, 409, 'conflict', 'Email já cadastrado neste tenant');
         return;
       }
       throw err;
@@ -59,11 +61,11 @@ export async function register(req: Request, res: Response): Promise<void> {
     }
   } catch (err: any) {
     if (err instanceof ValidationError) {
-      res.status(err.status).json({ error: err.message });
+      sendError(res, err.status, 'validation_error', err.message);
       return;
     }
     console.error('[register]', err.message);
-    res.status(500).json({ error: 'Erro interno ao registrar' });
+    sendError(res, 500, 'internal_error', 'Erro interno ao registrar');
   }
 }
 
@@ -78,7 +80,7 @@ export async function login(req: Request, res: Response): Promise<void> {
     if (!password) throw new ValidationError('password', 'Senha é obrigatória');
 
     if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(validTenantId)) {
-      res.status(401).json({ error: 'Credenciais inválidas' });
+      sendError(res, 401, 'unauthorized', 'Credenciais inválidas');
       return;
     }
 
@@ -97,14 +99,14 @@ export async function login(req: Request, res: Response): Promise<void> {
       );
 
       if (result.rows.length === 0) {
-        res.status(401).json({ error: 'Credenciais inválidas' });
+        sendError(res, 401, 'unauthorized', 'Credenciais inválidas');
         return;
       }
 
       const user  = result.rows[0];
       const valid = await bcrypt.compare(password, user.password_hash);
       if (!valid) {
-        res.status(401).json({ error: 'Credenciais inválidas' });
+        sendError(res, 401, 'unauthorized', 'Credenciais inválidas');
         return;
       }
 
@@ -127,11 +129,11 @@ export async function login(req: Request, res: Response): Promise<void> {
     }
   } catch (err: any) {
     if (err instanceof ValidationError) {
-      res.status(err.status).json({ error: err.message });
+      sendError(res, err.status, 'validation_error', err.message);
       return;
     }
     console.error('[login]', err.message);
-    res.status(500).json({ error: 'Erro interno ao fazer login' });
+    sendError(res, 500, 'internal_error', 'Erro interno ao fazer login');
   }
 }
 
@@ -161,7 +163,7 @@ export async function loginByEmail(req: Request, res: Response): Promise<void> {
 
       if (result.rows.length === 0) {
         // Resposta genérica — não revela se email existe ou não
-        res.status(401).json({ error: 'Credenciais inválidas' });
+        sendError(res, 401, 'unauthorized', 'Credenciais inválidas');
         return;
       }
 
@@ -173,7 +175,7 @@ export async function loginByEmail(req: Request, res: Response): Promise<void> {
       }
 
       if (!authenticated) {
-        res.status(401).json({ error: 'Credenciais inválidas' });
+        sendError(res, 401, 'unauthorized', 'Credenciais inválidas');
         return;
       }
 
@@ -186,8 +188,11 @@ export async function loginByEmail(req: Request, res: Response): Promise<void> {
 
       if (validMatches.length > 1) {
         // Retorna lista de tenants para o usuário escolher
-        res.status(300).json({
-          message: 'Email associado a múltiplas clínicas. Selecione uma.',
+        res.status(409).json({
+          error: {
+            code: 'tenant_conflict',
+            message: 'Email associado a múltiplas clínicas. Selecione uma.',
+          },
           tenants: validMatches.map((r) => ({
             tenantId: r.tenant_id,
             tenantName: r.tenant_name,
@@ -209,10 +214,10 @@ export async function loginByEmail(req: Request, res: Response): Promise<void> {
     }
   } catch (err: any) {
     if (err instanceof ValidationError) {
-      res.status(err.status).json({ error: err.message });
+      sendError(res, err.status, 'validation_error', err.message);
       return;
     }
     console.error('[loginByEmail]', err.message);
-    res.status(500).json({ error: 'Erro interno ao fazer login' });
+    sendError(res, 500, 'internal_error', 'Erro interno ao fazer login');
   }
 }
