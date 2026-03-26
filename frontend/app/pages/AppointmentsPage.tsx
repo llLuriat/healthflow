@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router';
 import {
-  BarChart3, Clock, Plus, Search, Calendar, ExternalLink, Loader2, AlertCircle, RefreshCw
+  BarChart3, Clock, Plus, Search, ExternalLink, Loader2, AlertCircle, RefreshCw
 } from 'lucide-react';
 import { Button }                         from '../components/ui/button';
 import { Card, CardContent }              from '../components/ui/card';

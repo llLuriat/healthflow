@@ -138,8 +138,8 @@ export async function login(req: Request, res: Response): Promise<void> {
 }
 
 // ─── LOGIN POR EMAIL (sem tenantId — UX simplificada) ─────────────────────────
-// Busca o tenant pelo email. Se houver múltiplos tenants com o mesmo email
-// (caso raro, mas possível), exige tenantId explícito via resposta 300.
+// Busca o tenant pelo email. Se houver múltiplos tenants com o mesmo email,
+// retorna conflito com lista de tenants para seleção explícita.
 export async function loginByEmail(req: Request, res: Response): Promise<void> {
   try {
     const { email, password } = req.body;

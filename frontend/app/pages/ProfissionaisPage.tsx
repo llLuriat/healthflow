@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import {
   Users as UsersIcon, Search, Mail, Phone, Edit, Trash2, Plus, Loader2, User, Activity
@@ -27,7 +27,6 @@ interface ProfessionalFormData {
   room:      string;
 }
 
-// ─── NavLinks definido FORA do componente para evitar recriação a cada render ─
 export default function ProfissionaisPage() {
   const [professionals, setProfessionals] = useState<Professional[]>([]);
   const [loading, setLoading]             = useState(true);
