@@ -9,6 +9,7 @@ import {
   IDEMPOTENCY_TABLE,
   sha256Hex,
 } from '../infra/idempotencyStore';
+import { sendError } from '../utils/http';
 
 let schemaChecked = false;
 
@@ -33,13 +34,13 @@ export async function idempotencyMiddleware(
   }
 
   if (typeof rawKey !== 'string' || !rawKey.trim()) {
-    res.status(400).json({ error: 'invalid_idempotency_key' });
+    sendError(res, 400, 'validation_error', 'Idempotency-Key inválida');
     return;
   }
 
   const tenantId = req.auth?.tenantId;
   if (!tenantId) {
-    res.status(401).json({ error: 'Tenant não identificado' });
+    sendError(res, 401, 'unauthorized', 'Tenant não identificado');
     return;
   }
 
@@ -102,7 +103,7 @@ export async function idempotencyMiddleware(
     if (existing.rows.length > 0 && existing.rows[0].response_body !== null) {
       const row = existing.rows[0];
       if (row.request_hash && row.request_hash !== requestHash) {
-        res.status(409).json({ error: 'idempotency_key_mismatch' });
+        sendError(res, 409, 'conflict', 'Idempotency-Key em conflito com payload diferente');
         return;
       }
       // response_body jsonb ja vem como objeto (node-postgres).
