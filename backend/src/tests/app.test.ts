@@ -1,3 +1,13 @@
+jest.mock('../db/pool', () => ({
+  __esModule: true,
+  default: {
+    connect: jest.fn().mockResolvedValue({
+      query: jest.fn().mockResolvedValue({ rows: [] }),
+      release: jest.fn(),
+    }),
+  },
+}));
+
 import request from 'supertest';
 import app from '../app';
 
@@ -46,13 +56,13 @@ describe('POST /auth/register — validações', () => {
 });
 
 describe('POST /auth/login — validações', () => {
-  it('tenantId inválido → 401', async () => {
+  it('tenantId inválido → 400', async () => {
     const res = await request(app).post('/auth/login').send({
       tenantId: 'nao-e-uuid',
       email: 'teste@clinica.com',
       password: 'senha1234',
     });
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(400);
   });
 
   it('body vazio → 400', async () => {

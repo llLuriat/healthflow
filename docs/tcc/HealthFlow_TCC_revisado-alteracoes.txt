@@ -1,0 +1,6 @@
+- Arquivo revisado criado sem substituir o original.
+- Narrativa, textos e fontes revisados para apresentação à banca.
+- Tecnologias legadas removidas dos slides técnicos: Fastify, Prisma, Vitest, Redis e Cloudflare.
+- Arquitetura alinhada ao repositório canônico: Express, TypeScript, React/Vite, PostgreSQL, migrations SQL e Jest.
+- Métricas legadas de k6, backup e RLS substituídas por evidências de validação local e pendências reais.
+- Anotações do apresentador revisadas em todos os 11 slides.

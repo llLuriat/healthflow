@@ -5,11 +5,15 @@ node_modules/
 # Build
 dist/
 build/
+coverage/
 
 # Variáveis de ambiente — NUNCA commitar valores reais
 .env
 .env.local
 .env.production
+.env.*
+!.env.example
+!**/.env.example
 
 # Logs
 *.log
@@ -25,3 +29,10 @@ Thumbs.db
 
 # Docker volumes locais
 postgres_data/
+
+# Artefatos locais de banco, ferramentas e backups
+.pgdata/
+tools/
+*.dump
+*.backup
+*.bak
