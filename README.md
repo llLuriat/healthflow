@@ -1,60 +1,40 @@
-# HealthFlow — Sistema Integrado
+# HealthFlow
 
-> Backend Express + Frontend React/Vite unificados. Segurança da auditoria 9.8+ preservada.
+Gestão de fluxo e comunicação para clínicas de pequeno e médio porte.
 
----
-
-## Estrutura do projeto
-
-```
-healthflow/
-├── backend/          ← Express + TypeScript (NODE)
-│   ├── src/
-│   │   ├── app.ts                            ← CORS + todas as rotas registradas
-│   │   ├── controllers/
-│   │   │   ├── auth.controller.ts
-│   │   │   ├── patients.controller.ts
-│   │   │   └── consultas.controller.ts       ← NOVO
-│   │   ├── routes/
-│   │   │   ├── auth.routes.ts
-│   │   │   ├── patients.routes.ts
-│   │   │   └── consultas.routes.ts           ← NOVO
-│   │   └── middlewares/
-│   │       ├── auth.middleware.ts            ← JWT obrigatório (inalterado)
-│   │       └── tenant.middleware.ts          ← TX + RLS + settled flag (inalterado)
-│   └── migrations/
-│       ├── 001–003_*.sql                     ← originais
-│       └── 004_create_consultas_fix_rls.sql  ← NOVO: tabela + fix NULLIF
-│
-└── frontend/         ← React + Vite + Tailwind
-    ├── app/
-    │   ├── lib/api.ts                        ← NOVO: cliente HTTP centralizado
-    │   ├── context/AuthContext.tsx           ← NOVO: estado global de auth
-    │   ├── components/
-    │   │   ├── ProtectedRoute.tsx            ← NOVO: guard de rota
-    │   │   └── StatusBadge.tsx               ← PATCH: suporte a 'cancelled'
-    │   ├── layouts/InstitutionLayout.tsx     ← PATCH: botão logout real
-    │   ├── App.tsx                           ← PATCH: AuthProvider + ProtectedRoute
-    │   └── pages/
-    │       ├── LoginPage.tsx                 ← PATCH: campo tenantId + chamada real
-    │       ├── PrimeiroAcessoPage.tsx        ← PATCH: register real + exibe tenantId
-    │       ├── DashboardPage.tsx             ← PATCH: dados reais do backend
-    │       └── ConsultasPage.tsx             ← PATCH: CRUD completo via /consultas
-    ├── index.html                            ← PATCH: referência corrigida para main.tsx
-    └── vite.config.ts                        ← PATCH: proxy para backend em dev
-```
+> Trabalho de Conclusão de Curso · SENAI Candeias – BA · 2026
 
 ---
 
-## Pré-requisitos
+## Descrição da aplicação
+
+O HealthFlow é um protótipo web que apoia a gestão de filas e consultas em clínicas. A recepção registra o check-in, a equipe atualiza o status do atendimento e o painel reflete o fluxo. A aplicação é composta por um backend Express + TypeScript e um frontend React + Vite, com PostgreSQL como banco de dados e isolamento de dados por clínica (tenant).
+
+O projeto está em desenvolvimento e usa dados de demonstração. A visão do paciente em tempo real ainda está em evolução.
+
+## Objetivo
+
+Reduzir a incerteza do paciente e a sobrecarga da recepção por meio de uma plataforma digital acessível e integrada de gestão de fluxo, apoiando a organização das consultas e dando mais visibilidade ao andamento do atendimento. Os impactos ainda não foram medidos e serão avaliados em um piloto.
+
+## Tecnologias utilizadas
+
+| Camada | Tecnologias |
+|---|---|
+| Backend | Node.js 20+, Express, TypeScript, JWT |
+| Frontend | React, Vite, Tailwind CSS |
+| Banco de dados | PostgreSQL 14+ (migrations SQL) |
+| Testes | Jest |
+| Gerenciadores de pacotes | npm (backend) e pnpm ou npm (frontend) |
+
+---
+
+## Como instalar
+
+### Pré-requisitos
 
 - Node.js 20+
 - pnpm (frontend) ou npm (backend)
 - PostgreSQL 14+
-
----
-
-## Setup em 5 passos
 
 ### 1. Banco de dados
 
@@ -70,14 +50,15 @@ psql -U postgres -d healthflow -f backend/migrations/003_hardening_multi_tenant.
 psql -U postgres -d healthflow -f backend/migrations/004_create_consultas_fix_rls.sql
 ```
 
-### 2. Backend — configurar .env
+### 2. Backend
 
 ```bash
 cd backend/
 cp .env.example .env
+npm install
 ```
 
-Edite `.env` com seus valores:
+Edite o arquivo `.env` com seus valores:
 
 ```env
 PORT=3000
@@ -88,92 +69,153 @@ CORS_ORIGINS=http://localhost:5173
 ENABLE_UNSAFE_TENANT=false
 ```
 
-### 3. Backend — instalar e rodar
+### 3. Frontend
+
+```bash
+cd frontend/
+cp .env.example .env
+pnpm install   # ou npm install
+```
+
+Deixe `VITE_API_URL` em branco para usar o proxy do Vite (recomendado em desenvolvimento).
+
+---
+
+## Como executar
+
+### Backend
 
 ```bash
 cd backend/
-npm install
 npm run dev
 # → http://localhost:3000
 # → GET http://localhost:3000/health → {"status":"ok"}
 ```
 
-### 4. Frontend — configurar
+### Frontend
 
 ```bash
 cd frontend/
-cp .env.example .env
-# VITE_API_URL deixe em branco para usar o proxy (recomendado em dev)
-```
-
-### 5. Frontend — instalar e rodar
-
-```bash
-cd frontend/
-pnpm install   # ou npm install
 pnpm dev       # ou npm run dev
 # → http://localhost:5173
 ```
 
+### Testes (backend)
+
+```bash
+cd backend/
+npm test -- --runInBand
+```
+
 ---
 
-## Fluxo completo de teste
+## Estrutura do projeto
 
 ```
-1. Acesse: http://localhost:5173/primeiro-acesso
-   → Preencha: nome da clínica + segmento → e-mail + senha
-   → O backend cria tenant + user → retorna tenantId
-   → A tela exibe o UUID com botão "Copiar" — GUARDE ESTE ID
+healthflow/
+├── backend/          ← Express + TypeScript (Node.js)
+│   ├── src/
+│   │   ├── app.ts                            ← CORS + todas as rotas registradas
+│   │   ├── controllers/
+│   │   │   ├── auth.controller.ts
+│   │   │   ├── patients.controller.ts
+│   │   │   └── consultas.controller.ts
+│   │   ├── routes/
+│   │   │   ├── auth.routes.ts
+│   │   │   ├── patients.routes.ts
+│   │   │   └── consultas.routes.ts
+│   │   └── middlewares/
+│   │       ├── auth.middleware.ts            ← JWT obrigatório
+│   │       └── tenant.middleware.ts          ← transação + contexto de tenant
+│   └── migrations/
+│       ├── 001–003_*.sql                     ← migrations originais
+│       └── 004_create_consultas_fix_rls.sql  ← tabela de consultas + ajuste NULLIF
+│
+└── frontend/         ← React + Vite + Tailwind
+    ├── app/
+    │   ├── lib/api.ts                        ← cliente HTTP centralizado
+    │   ├── context/AuthContext.tsx           ← estado global de autenticação
+    │   ├── components/
+    │   │   ├── ProtectedRoute.tsx            ← proteção de rotas
+    │   │   └── StatusBadge.tsx               ← badge de status (inclui 'cancelled')
+    │   ├── layouts/InstitutionLayout.tsx     ← layout com botão de logout
+    │   ├── App.tsx                           ← AuthProvider + ProtectedRoute
+    │   └── pages/
+    │       ├── LoginPage.tsx                 ← login com tenantId
+    │       ├── PrimeiroAcessoPage.tsx        ← cadastro da clínica + exibe tenantId
+    │       ├── DashboardPage.tsx             ← dados reais do backend
+    │       └── ConsultasPage.tsx             ← CRUD de consultas via /consultas
+    ├── index.html
+    └── vite.config.ts                        ← proxy para o backend em desenvolvimento
+```
 
-2. Acesse: http://localhost:5173/login
+---
+
+## Funcionalidades principais
+
+- **Cadastro da clínica (primeiro acesso):** cria o tenant e o usuário e exibe o `tenantId`.
+- **Login e controle de acesso:** autenticação por JWT e rotas protegidas no frontend e no backend.
+- **Dashboard:** consultas do dia, totais e próximas consultas, com dados reais do backend.
+- **Gestão de consultas:** criar, listar, atualizar o status e cancelar (cancelamento lógico).
+- **Isolamento por clínica (tenant):** o `tenantId` vem sempre do JWT verificado pelo backend, nunca de um header HTTP.
+- **Logout:** botão "Sair" na barra lateral remove o token e redireciona para o login.
+
+### Fluxo de teste
+
+```
+1. Acesse http://localhost:5173/primeiro-acesso
+   → Preencha nome da clínica + segmento → e-mail + senha
+   → O backend cria tenant + usuário e retorna o tenantId
+   → A tela exibe o UUID com botão "Copiar" — guarde este ID
+
+2. Acesse http://localhost:5173/login
    → Tenant ID: cole o UUID recebido
-   → E-mail e Senha: os que você cadastrou
-   → Backend valida → retorna JWT
-   → Frontend salva token, redireciona para /dashboard
+   → E-mail e senha: os cadastrados
+   → O backend valida e retorna o JWT; o frontend salva o token e abre /dashboard
 
-3. Dashboard (dados reais)
+3. Dashboard
    → Busca GET /consultas?date=<hoje> com Bearer token
    → Exibe cards de totais e próximas consultas
 
 4. Consultas → "Nova Consulta"
-   → Preencha paciente, profissional, data/hora
-   → POST /consultas → consulta aparece na tabela
+   → Preencha paciente, profissional e data/hora
+   → POST /consultas → a consulta aparece na tabela
 
 5. Atualizar status
    → Dropdown na linha → "Em andamento", "Finalizado", etc.
-   → PATCH /consultas/:id/estado → atualiza na tabela
+   → PATCH /consultas/:id/estado
 
 6. Cancelar
    → Botão lixeira → DELETE /consultas/:id
-   → Status muda para "Cancelada"
+   → O status muda para "Cancelada"
 
 7. Logout
-   → Botão "Sair" na sidebar → token removido → redirect /login
+   → Botão "Sair" na barra lateral → token removido → redirecionamento para /login
 ```
 
----
+### API
 
-## API endpoints
-
-| Método | Endpoint                  | Auth? | Descrição                        |
-|--------|---------------------------|-------|----------------------------------|
-| POST   | /auth/register            | —     | Cria tenant + user               |
-| POST   | /auth/login               | —     | Retorna JWT                      |
-| GET    | /consultas                | JWT   | Lista consultas do tenant        |
-| POST   | /consultas                | JWT   | Cria consulta                    |
-| GET    | /consultas/:id            | JWT   | Detalhe de consulta              |
-| PATCH  | /consultas/:id/estado     | JWT   | Transição de estado              |
-| DELETE | /consultas/:id            | JWT   | Cancelamento lógico              |
-| GET    | /patients                 | JWT   | Lista pacientes                  |
-| POST   | /patients                 | JWT   | Cria paciente                    |
-| GET    | /health                   | —     | Health check                     |
+| Método | Endpoint | Auth | Descrição |
+|---|---|---|---|
+| POST | /auth/register | — | Cria tenant + usuário |
+| POST | /auth/login | — | Retorna JWT |
+| GET | /consultas | JWT | Lista consultas do tenant |
+| POST | /consultas | JWT | Cria consulta |
+| GET | /consultas/:id | JWT | Detalhe de consulta |
+| PATCH | /consultas/:id/estado | JWT | Transição de estado |
+| DELETE | /consultas/:id | JWT | Cancelamento lógico |
+| GET | /patients | JWT | Lista pacientes |
+| POST | /patients | JWT | Cria paciente |
+| GET | /health | — | Health check |
 
 **Payload de login:**
+
 ```json
 { "tenantId": "uuid", "email": "usuario@exemplo.com", "password": "senha" }
 ```
 
 **Payload de criação de consulta:**
+
 ```json
 {
   "patient_name": "Maria Silva",
@@ -186,27 +228,47 @@ pnpm dev       # ou npm run dev
 
 ---
 
-## Correções aplicadas vs. código original
+## Integrantes
+
+- Isabella Almeida
+- Lucas Fortuna
+- Murilo de Jesus
+- Maria Eduarda Andrade
+- Alef Sena
+
+## Instituição
+
+SENAI Candeias
+
+## Professor orientador
+
+Adalberto Santana
+
+---
+
+## Notas técnicas
+
+### Correções aplicadas em relação ao código original
 
 | # | Problema original | Arquivo modificado | Correção |
 |---|---|---|---|
-| NC1 | tenantId via header não-autenticado | `src/app.ts` | CORS adicionado; tenant vem 100% do JWT |
-| NC3 | RLS sem NULLIF (exception em vez de fail-closed) | `migrations/004_*.sql` | NULLIF em todas as policies |
+| NC1 | tenantId via header não autenticado | `src/app.ts` | CORS adicionado; o tenant vem 100% do JWT |
+| NC3 | RLS sem NULLIF (exceção em vez de fail-closed) | `migrations/004_*.sql` | NULLIF em todas as policies |
 | — | Login sem campo tenantId | `pages/LoginPage.tsx` | Campo UUID + preenchimento automático pós-registro |
 | — | Register sem mapeamento correto | `pages/PrimeiroAcessoPage.tsx` | Mapeamento correto + exibição do tenantId |
 | — | Sem chamadas HTTP reais | `app/lib/api.ts` | Cliente centralizado com JWT automático |
 | — | Sem AuthContext / rotas abertas | `context/AuthContext.tsx` + `App.tsx` | Estado global + ProtectedRoute |
-| — | Dashboard hardcoded | `pages/DashboardPage.tsx` | GET /consultas real |
+| — | Dashboard fixo (hardcoded) | `pages/DashboardPage.tsx` | GET /consultas real |
 | — | ConsultasPage sem CRUD | `pages/ConsultasPage.tsx` | Criar, listar, atualizar, cancelar |
-| — | Sidebar sem logout | `layouts/InstitutionLayout.tsx` | Botão Sair via useAuth().logout() |
-| — | index.html com caminho errado | `index.html` | /src/main.tsx → /main.tsx |
-| — | Sem proxy Vite | `vite.config.ts` | Proxy /consultas, /auth, /patients, /health |
+| — | Sidebar sem logout | `layouts/InstitutionLayout.tsx` | Botão Sair via `useAuth().logout()` |
+| — | index.html com caminho errado | `index.html` | `/src/main.tsx` → `/main.tsx` |
+| — | Sem proxy Vite | `vite.config.ts` | Proxy para /consultas, /auth, /patients, /health |
 | — | /consultas inexistente no backend | Novos arquivos | routes + controller + migration |
 
-### Garantias da auditoria — preservadas integralmente
+### Garantias de segurança preservadas
 
-- `authMiddleware` — **inalterado**, aplicado em todas as rotas protegidas
-- `tenantMiddleware` — **inalterado**, `settled` flag + lifecycle correto + circuit breaker
-- `tenantId` nunca vem de header HTTP — sempre extraído do JWT verificado pelo backend
-- `errorHandler` — sem double-release (não gerencia pool)
-- RLS fail-closed — NULLIF garante 0 rows em vez de exception quando `app.tenant_id` não definido
+- `authMiddleware` inalterado, aplicado em todas as rotas protegidas.
+- `tenantMiddleware` inalterado, com flag `settled`, ciclo de vida correto e circuit breaker.
+- `tenantId` nunca vem de header HTTP; é sempre extraído do JWT verificado pelo backend.
+- `errorHandler` sem double-release (não gerencia o pool).
+- RLS fail-closed: NULLIF retorna 0 linhas, em vez de exceção, quando `app.tenant_id` não está definido.
