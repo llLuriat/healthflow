@@ -1,5 +1,5 @@
 # docker-compose.yml — Desenvolvimento local
-# Para produção, use: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up
+# Para produção, use: docker compose -f docker-compose.yml -f docker-compose.prod.yml up
 
 services:
   healthflow-db:
@@ -60,7 +60,7 @@ services:
     depends_on:
       - backend
     environment:
-      VITE_API_URL: ""   # vazio = usa proxy do Vite (evita CORS em dev)
+      VITE_API_URL: "http://backend:3000"   # nome do serviço Docker; o Vite faz proxy sem CORS
       NODE_ENV: development
     command: ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
     networks:

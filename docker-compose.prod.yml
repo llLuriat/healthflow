@@ -1,5 +1,5 @@
 # docker-compose.prod.yml — Produção
-# Uso: docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+# Uso: docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
 #
 # Variáveis obrigatórias (definir no ambiente ou via .env de produção):
 #   JWT_SECRET          — segredo JWT forte (openssl rand -hex 64)
@@ -38,7 +38,7 @@ services:
         VITE_API_URL: ${VITE_API_URL:-https://api.healthflow.io}
     ports:
       - "80:80"
-      - "443:443"
+    command: ["nginx", "-g", "daemon off;"]
 
 volumes:
   healthflow_data:

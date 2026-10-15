@@ -32,29 +32,24 @@ Reduzir a incerteza do paciente e a sobrecarga da recepção por meio de uma pla
 
 ### Pré-requisitos
 
-- Node.js 20+
-- pnpm (frontend) ou npm (backend)
-- PostgreSQL 14+
+- Node.js 20+ (execução nativa)
+- npm ou pnpm (execução nativa)
+- PostgreSQL 14+ (execução nativa)
+- Docker Desktop com Docker Compose v2 (execução por containers)
 
 ### 1. Banco de dados
 
-```bash
-# Crie o banco como superuser
+```powershell
+# Crie um banco vazio como superuser.
+# As migrations são executadas automaticamente quando o backend inicia.
 psql -U postgres -c "CREATE DATABASE healthflow;"
-
-# Execute as migrations em ordem
-psql -U postgres -d healthflow -f backend/migrate.sql
-psql -U postgres -d healthflow -f backend/migrations/001_create_outbox_events.sql
-psql -U postgres -d healthflow -f backend/migrations/002_create_outbox_relay_cursor.sql
-psql -U postgres -d healthflow -f backend/migrations/003_hardening_multi_tenant.sql
-psql -U postgres -d healthflow -f backend/migrations/004_create_consultas_fix_rls.sql
 ```
 
 ### 2. Backend
 
-```bash
+```powershell
 cd backend/
-cp .env.example .env
+Copy-Item .env.example .env
 npm install
 ```
 
@@ -71,9 +66,9 @@ ENABLE_UNSAFE_TENANT=false
 
 ### 3. Frontend
 
-```bash
+```powershell
 cd frontend/
-cp .env.example .env
+Copy-Item .env.example .env
 pnpm install   # ou npm install
 ```
 
@@ -105,6 +100,34 @@ pnpm dev       # ou npm run dev
 ```bash
 cd backend/
 npm test -- --runInBand
+```
+
+### Docker Compose (desenvolvimento)
+
+Instale e inicie o **Docker Desktop**. No terminal integrado do VS Code, estes comandos devem retornar versões em vez de erro:
+
+```powershell
+docker --version
+docker compose version
+```
+
+Na raiz do repositório, suba o banco, backend e frontend:
+
+```powershell
+docker compose up --build
+```
+
+Serviços expostos: PostgreSQL em `localhost:5432`, backend em `http://localhost:3000` e frontend em `http://localhost:5173`. Para encerrar os containers sem apagar dados locais, execute `docker compose down`.
+
+### Docker Compose (produção)
+
+Antes da primeira subida, defina segredos fortes e crie o volume externo exigido pela configuração de produção:
+
+```powershell
+$env:JWT_SECRET = "substitua-por-um-segredo-forte"
+$env:POSTGRES_PASSWORD = "substitua-por-uma-senha-forte"
+docker volume create healthflow_data
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
 
 ---

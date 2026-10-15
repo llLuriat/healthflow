@@ -4,7 +4,11 @@
     {
       "label": "Start HealthFlow",
       "type": "shell",
-      "command": "docker-compose up",
+      "command": "docker",
+      "args": ["compose", "up", "--build"],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "problemMatcher": []
     }
   ]
